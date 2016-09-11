@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 import datetime as dt
+import math
 import os
 from util import get_data, plot_data
 
@@ -10,16 +11,13 @@ def compute_portvals(orders_file = "./orders/orders.csv", start_val = 1000000):
     # this is the function the autograder will call to test your code
     # TODO: Your code here
     ordersfromfile = pd.read_csv(orders_file, index_col='Date', parse_dates=True, na_values=['nan'])
-    start_date = ordersfromfile.index[0]
-    end_date = ordersfromfile.index[-1]
-    # print ordersfromfile
-    # df = pd.DataFrame()
     for date, row in ordersfromfile.iterrows():
-        symbol = list(row['Symbol'])
-        # print date, symbol
-    	df = get_data(symbol, pd.date_range(date, date))
-    	print df
-    	# print df
+        symbol = list()
+        symbol.append(row['Symbol'])
+        dates = pd.date_range(date, date)
+    	df = get_data(symbol, dates, addSPY=False)     # get that row's date, symbol, price
+    	security_price = df.values[0][0]
+    	
 
     # In the template, instead of computing the value of the portfolio, we just
     # read in the value of IBM over 6 months
@@ -29,6 +27,11 @@ def compute_portvals(orders_file = "./orders/orders.csv", start_val = 1000000):
     #portvals = portvals[['IBM']]  # remove SPY
 
     #return portvals
+
+def compute_leverage(longs, shorts, cash):
+	return (math.sum(longs) + sum(math.abs(shorts))) / (math.sum(longs) - math.sum(math.abs(shorts)) + cash)
+
+def 
 
 def test_code():
     # this is a helper function you can use to test your code
