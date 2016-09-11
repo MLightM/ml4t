@@ -9,15 +9,26 @@ from util import get_data, plot_data
 def compute_portvals(orders_file = "./orders/orders.csv", start_val = 1000000):
     # this is the function the autograder will call to test your code
     # TODO: Your code here
+    ordersfromfile = pd.read_csv(orders_file, index_col='Date', parse_dates=True, na_values=['nan'])
+    start_date = ordersfromfile.index[0]
+    end_date = ordersfromfile.index[-1]
+    # print ordersfromfile
+    # df = pd.DataFrame()
+    for date, row in ordersfromfile.iterrows():
+        symbol = list(row['Symbol'])
+        # print date, symbol
+    	df = get_data(symbol, pd.date_range(date, date))
+    	print df
+    	# print df
 
     # In the template, instead of computing the value of the portfolio, we just
     # read in the value of IBM over 6 months
-    start_date = dt.datetime(2008,1,1)
-    end_date = dt.datetime(2008,6,1)
-    portvals = get_data(['IBM'], pd.date_range(start_date, end_date))
-    portvals = portvals[['IBM']]  # remove SPY
+    #start_date = dt.datetime(2008,1,1)
+    #end_date = dt.datetime(2008,6,1)
+    #portvals = get_data(['IBM'], pd.date_range(start_date, end_date))
+    #portvals = portvals[['IBM']]  # remove SPY
 
-    return portvals
+    #return portvals
 
 def test_code():
     # this is a helper function you can use to test your code
