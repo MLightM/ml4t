@@ -8,57 +8,68 @@ import os
 import copy
 from util import get_data, plot_data
 
-def compute_portvals(orders_file = "./orders/orders-leverage-3.csv", start_val = 1000000):
+def compute_portvals(orders_file = "./orders/orders-short.csv", start_val = 1000000):
     # this is the function the autograder will call to test your code
     # TODO: Your code here
-    longs = 0
-    shorts = 0
+    Final_portvals = pd.DataFrame()
     cash = start_val
     Symbols = {}
     ordersfromfile = pd.read_csv(orders_file, index_col='Date', parse_dates=True, na_values=['nan'])
+    print ordersfromfile, '\n'
+
+    #----------------Get SPY trading dates----------------
+    start_date, end_date = ordersfromfile.index[0], ordersfromfile.index[-1]
+    Dates_range = pd.date_range(start_date, end_date)
+    df_SPY = get_data(['SPY'], Dates_range, addSPY=False)
+    df_dates = pd.DataFrame(index = df_SPY.index)
+
+    ordersfromfile = df_dates.join(ordersfromfile)
     print ordersfromfile
+
     for date, row in ordersfromfile.iterrows():
     	old_Symbols = copy.deepcopy(Symbols)
         old_cash = cash
+        is_nan = pd.isnull(row).all()
         symbol = row['Symbol']
-        if symbol not in Symbols:
-        	Symbols[symbol] = 0
+        if symbol not in Symbols and not is_nan:
+            Symbols[symbol] = 0
         dates = pd.date_range(date, date)
     	df = get_data(Symbols.keys(), dates, addSPY=False)     # get that row's date, symbol, price
-    	# print df
-        security_price = df[symbol].values[0]
-        trans_price = security_price*row['Shares']
-    	if row['Order'] == 'BUY':
-    		Symbols[symbol] += row['Shares']
-    		cash -= trans_price
-        else:
-    		Symbols[symbol] -= row['Shares']
-    		cash += trans_price
+
+        #-------------Calculate today's trading----------------
+        if not is_nan:
+            security_price = df[symbol].values[0]           # traded security's present price
+            trans_price = security_price*row['Shares']      # total trading price
+    	
+        #-------------Get the new Symbol dic & cash------------
+            if row['Order'] == 'BUY':
+    		    Symbols[symbol] += row['Shares']
+    		    cash -= trans_price
+            else:
+    		    Symbols[symbol] -= row['Shares']
+    		    cash += trans_price
     	
         portfolio_stats = df.values[0] * np.array(Symbols.values())
         longs = portfolio_stats[portfolio_stats>=0]
         shorts = portfolio_stats[portfolio_stats<0]
 
-        # print Symbols, "--------Portfoilo-------",'\n'
-        # print date, row, "--------Current Trading-------",'\n'
-        print "Portvals: {}, Cash: {}, Longs: {}, Shorts: {}".format(cash+longs.sum()+shorts.sum(), cash, longs.sum(), shorts.sum()), '\n'
+        portvals = cash+longs.sum()+shorts.sum()      # the total portfolio values
         leverage = compute_leverage(longs, shorts, cash)
         if leverage > 2:
-        	Symbols = old_Symbols
-        	# longs = old_longs
-        	# shorts = old_shorts
-        	cash = old_cash
-
-    	
-
-    # In the template, instead of computing the value of the portfolio, we just
-    # read in the value of IBM over 6 months
-    #start_date = dt.datetime(2008,1,1)
-    #end_date = dt.datetime(2008,6,1)
-    #portvals = get_data(['IBM'], pd.date_range(start_date, end_date))
-    #portvals = portvals[['IBM']]  # remove SPY
-
-    #return portvals
+            Symbols = old_Symbols
+            cash = old_cash
+            portfolio_stats = df.values[0] * np.array(Symbols.values())
+            longs = portfolio_stats[portfolio_stats>=0]
+            shorts = portfolio_stats[portfolio_stats<0]
+            portvals = cash+longs.sum()+shorts.sum()      # the total portfolio values
+        
+        temp_port = pd.DataFrame([portvals],index=dates)
+        Final_portvals = Final_portvals.append(temp_port)
+        # print "Date: {}, Portvals: {}, Cash: {}, Longs: {}, Shorts: {}".format(date, portvals, cash, longs.sum(), shorts.sum()), '\n'
+    print '-------------------'
+    Final_portvals.columns = ['portvals']
+    print Final_portvals.head()
+    return Final_portvals
 
 def compute_leverage(longs, shorts, cash):
 	return (sum(longs) - sum(abs(shorts))) / (sum(longs) + sum(abs(shorts)) + cash)
