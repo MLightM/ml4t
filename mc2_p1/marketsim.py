@@ -8,7 +8,7 @@ import os
 import copy
 from util import get_data, plot_data
 
-def compute_portvals(orders_file = "./orders/orders.csv", start_val = 1000000):
+def compute_portvals(orders_file = "./orders/orders-leverage-3.csv", start_val = 1000000):
     # this is the function the autograder will call to test your code
     # TODO: Your code here
     Final_portvals = pd.DataFrame()
@@ -21,7 +21,7 @@ def compute_portvals(orders_file = "./orders/orders.csv", start_val = 1000000):
     start_date, end_date = ordersfromfile.index[0], ordersfromfile.index[-1]
     Dates_range = pd.date_range(start_date, end_date)
     df_SPY = get_data(['SPY'], Dates_range, addSPY=False)
-    # df_SPX = get_data(['SPX'], Dates_range, addSPY=False)
+    df_SPX = get_data(['$SPX'], Dates_range, addSPY=False)
     df_dates = pd.DataFrame(index = df_SPY.index)
 
     ordersfromfile = df_dates.join(ordersfromfile)
@@ -69,42 +69,42 @@ def compute_portvals(orders_file = "./orders/orders.csv", start_val = 1000000):
         # print "Date: {}, Portvals: {}, Cash: {}, Longs: {}, Shorts: {}".format(date, portvals, cash, longs.sum(), shorts.sum()), '\n'
     print '-------------------'
     Final_portvals.columns = ['portvals']
-    # print Final_portvals
+    print Final_portvals
 
-    portval_SPY = daily_port_val(df_SPY, [1], start_val)
+    portval_SPX = daily_port_val(df_SPX, [1], start_val)
     # print '\n', portval_SPY, '--------------'
 
-    final_print(Final_portvals, portval_SPY, start_date, end_date)
+    final_print(Final_portvals, portval_SPX, start_date, end_date)
 
     return Final_portvals
 
-def final_print(Final_portvals, portval_SPY, start_date, end_date):
+def final_print(Final_portvals, portval_SPX, start_date, end_date):
     Final_portvals_daily_returns = compute_daily_return(Final_portvals)
-    portval_SPY_daily_returns = compute_daily_return(portval_SPY)
+    portval_SPX_daily_returns = compute_daily_return(portval_SPX)
 
     Final_portvals_daily_returns_std = Final_portvals_daily_returns.std()
     Final_portvals_daily_returns_aver = Final_portvals_daily_returns.mean()
     Final_portvals_cumu_return = compute_cumulative_return(Final_portvals)
     Final_portvals_SR = math.sqrt(252)*(Final_portvals_daily_returns_aver-0)/Final_portvals_daily_returns_std
 
-    portval_SPY_daily_returns_std = portval_SPY_daily_returns.std()
-    portval_SPY_daily_returns_aver = portval_SPY_daily_returns.mean()
-    portval_SPY_cumu_return = compute_cumulative_return(portval_SPY)
-    portval_SPY_SR = math.sqrt(252)*(portval_SPY_daily_returns_aver-0)/portval_SPY_daily_returns_std
+    portval_SPX_daily_returns_std = portval_SPX_daily_returns.std()
+    portval_SPX_daily_returns_aver = portval_SPX_daily_returns.mean()
+    portval_SPX_cumu_return = compute_cumulative_return(portval_SPX)
+    portval_SPX_SR = math.sqrt(252)*(portval_SPX_daily_returns_aver-0)/portval_SPX_daily_returns_std
 
     print "Date Range: {} to {}".format(start_date, end_date)
     print
     print "Sharpe Ratio of Fund: {}".format(Final_portvals_SR)
-    print "Sharpe Ratio of SPY : {}".format(portval_SPY_SR)
+    print "Sharpe Ratio of $SPX : {}".format(portval_SPX_SR)
     print
     print "Cumulative Return of Fund: {}".format(Final_portvals_cumu_return)
-    print "Cumulative Return of SPY : {}".format(portval_SPY_cumu_return)
+    print "Cumulative Return of $SPX : {}".format(portval_SPX_cumu_return)
     print
     print "Standard Deviation of Fund: {}".format(Final_portvals_daily_returns_std)
-    print "Standard Deviation of SPY : {}".format(portval_SPY_daily_returns_std)
+    print "Standard Deviation of $SPX : {}".format(portval_SPX_daily_returns_std)
     print
     print "Average Daily Return of Fund: {}".format(Final_portvals_daily_returns_aver)
-    print "Average Daily Return of SPY : {}".format(portval_SPY_daily_returns_aver)
+    print "Average Daily Return of $SPX : {}".format(portval_SPX_daily_returns_aver)
     print
     print "Final Portfolio Value: {}".format(Final_portvals.ix[-1])
 
